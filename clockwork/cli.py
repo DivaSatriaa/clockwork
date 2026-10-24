@@ -1,4 +1,4 @@
-"""hzctl command line interface."""
+"""Clockwork command line interface."""
 from __future__ import annotations
 
 import argparse
@@ -9,7 +9,7 @@ from . import core
 
 
 def _label(rate: int) -> str:
-    return core.PRESETS.get(rate, f"{rate} Hz")
+    return core.quality_label(rate)
 
 
 def cmd_status(_: argparse.Namespace) -> None:
@@ -23,11 +23,12 @@ def cmd_status(_: argparse.Namespace) -> None:
         extra = ""
         if n.active_rate or n.active_format:
             extra = f"  [{n.active_format or '?'} @ {n.active_rate or '?'}]"
-        print(f"{n.id:>4}  {n.kind:<6} {n.description}{extra}")
+        note = "" if n.configurable else "  (not adjustable: not an ALSA device)"
+        print(f"{n.id:>4}  {n.kind:<6} {n.description}{extra}{note}")
         print(f"      {n.name}")
     devs = core.load_devices()
     if devs:
-        print("\nPer-device rules saved by hzctl:")
+        print("\nPer-device rules saved by Clockwork:")
         for name, cfg in devs.items():
             print(f"  {name}: {cfg}")
 
@@ -60,6 +61,14 @@ def cmd_set(a: argparse.Namespace) -> None:
 
 
 def cmd_device(a: argparse.Namespace) -> None:
+    try:
+        node = next((n for n in core.list_nodes() if n.name == a.node), None)
+    except core.ClockworkError:
+        node = None  # PipeWire not running; still allow writing the rule
+    if node is None:
+        print(f"warning: no device named {a.node!r} is connected right now", file=sys.stderr)
+    elif not node.configurable:
+        print(f"warning: {a.node} is a {node.api or 'non-ALSA'} device; the rule will have no effect", file=sys.stderr)
     path = core.set_device(a.node, rate=a.rate, fmt=a.format)
     print(f"Wrote {path}")
     if not a.no_restart:
@@ -69,11 +78,11 @@ def cmd_device(a: argparse.Namespace) -> None:
 
 def cmd_reset(_: argparse.Namespace) -> None:
     core.reset_all()
-    print("Removed hzctl config and restarted audio services (backups kept)")
+    print("Removed Clockwork config and restarted audio services (backups kept)")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="hzctl", description="Sample-rate control for PipeWire")
+    p = argparse.ArgumentParser(prog="clockwork", description="Clockwork: sample-rate control for PipeWire")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("status", help="show clock settings and devices").set_defaults(fn=cmd_status)
@@ -91,13 +100,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(fn=cmd_set)
 
     d = sub.add_parser("device", help="persist a per-device rule (WirePlumber)")
-    d.add_argument("node", help="node.name, see `hzctl list`")
+    d.add_argument("node", help="node.name, see `clockwork list`")
     d.add_argument("--rate", type=int)
     d.add_argument("--format", choices=core.SUPPORTED_FORMATS)
     d.add_argument("--no-restart", action="store_true")
     d.set_defaults(fn=cmd_device)
 
-    sub.add_parser("reset", help="remove everything hzctl wrote").set_defaults(fn=cmd_reset)
+    sub.add_parser("reset", help="remove everything Clockwork wrote").set_defaults(fn=cmd_reset)
     return p
 
 
@@ -105,8 +114,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         args.fn(args)
-    except core.HzctlError as e:
-        print(f"hzctl: {e}", file=sys.stderr)
+    except core.ClockworkError as e:
+        print(f"clockwork: {e}", file=sys.stderr)
         return 1
     return 0
 
