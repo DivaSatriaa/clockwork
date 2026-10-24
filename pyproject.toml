@@ -3,17 +3,20 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hzctl"
-version = "0.1.0"
-description = "Windows-style sample rate control for PipeWire on Linux (CLI + GTK4 GUI)"
+name = "clockwork-audio"
+version = "0.2.0"
+description = "Clockwork: Windows-style sample rate and bit depth control for PipeWire on Linux (CLI + GTK4 GUI)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 keywords = ["pipewire", "wireplumber", "audio", "linux", "sample-rate"]
 
 [project.scripts]
-hzctl = "hzctl.cli:main"
-hzctl-gui = "hzctl.gui:main"
+clockwork = "clockwork.cli:main"
+clockwork-gui = "clockwork.gui:main"
 
 [tool.setuptools]
-packages = ["hzctl"]
+packages = ["clockwork"]
+
+[tool.setuptools.package-data]
+clockwork = ["data/icons/hicolor/scalable/apps/*.svg"]

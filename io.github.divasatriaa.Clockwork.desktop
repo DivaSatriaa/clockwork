@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Clockwork
+GenericName=Audio Format
+Comment=Set the sample rate and bit depth of speakers, headsets and microphones
+Exec=clockwork-gui
+Icon=io.github.divasatriaa.Clockwork
+Terminal=false
+Categories=AudioVideo;Audio;Settings;
+Keywords=sample rate;hz;bit depth;pipewire;audio;microphone;headset;
+StartupNotify=true
