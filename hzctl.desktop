@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=hzctl
+GenericName=Audio Sample Rate
+Comment=Set PipeWire sample rate (CD / DVD / Studio quality)
+Exec=hzctl-gui
+Icon=audio-card
+Terminal=false
+Categories=AudioVideo;Settings;
